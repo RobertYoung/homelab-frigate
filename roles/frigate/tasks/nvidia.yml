@@ -1,0 +1,57 @@
+---
+- name: Add debian repo
+  become: true
+  ansible.builtin.deb822_repository:
+    name: debian
+    types: deb
+    uris: https://deb.debian.org/debian
+    suites: ["{{ ansible_facts['distribution_release'] }}"]
+    components:
+      - main
+      - contrib
+      - non-free
+      - non-free-firmware
+    state: present
+
+- name: Add libnvidia-container repo
+  become: true
+  ansible.builtin.deb822_repository:
+    name: libnvidia-container
+    types: [deb]
+    uris: "https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH)"
+    suites: "/"
+    signed_by: https://nvidia.github.io/libnvidia-container/gpgkey
+    state: present
+    enabled: true
+
+- name: Update apt package index
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install NVIDIA driver and firmware
+  become: true
+  ansible.builtin.apt:
+    name:
+      - linux-headers-amd64
+      - nvidia-driver
+      - firmware-misc-nonfree
+      - nvidia-container-toolkit
+    state: present
+
+- name: Check if NVIDIA runtime is configured in /etc/docker/daemon.json
+  become: true
+  ansible.builtin.slurp:
+    src: /etc/docker/daemon.json
+  register: frigate_daemon_json_content
+  failed_when: false
+
+- name: Configure the NVIDIA container runtime if not already configured
+  become: true
+  ansible.builtin.command: nvidia-ctk runtime configure --runtime=docker
+  register: frigate_nvidia_ctk_result
+  changed_when: frigate_nvidia_ctk_result.rc == 0
+  when: >
+    frigate_daemon_json_content.content is not defined or
+    'nvidia' not in (frigate_daemon_json_content.content | b64decode)
+  notify: Reboot for NVIDIA driver

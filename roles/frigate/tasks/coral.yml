@@ -1,0 +1,25 @@
+---
+- name: Add coral-edgetpu repo
+  become: true
+  ansible.builtin.deb822_repository:
+    name: coral-edgetpu
+    types: deb
+    uris: https://packages.cloud.google.com/apt
+    suites: coral-edgetpu-stable
+    signed_by: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    enabled: true
+    components:
+      - main
+    state: present
+
+- name: Update apt package index
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install coral dependencies
+  become: true
+  ansible.builtin.apt:
+    name:
+      - libedgetpu1-std
+    state: present

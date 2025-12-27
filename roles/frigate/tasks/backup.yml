@@ -1,0 +1,84 @@
+---
+- name: Create backup directory
+  become: true
+  ansible.builtin.file:
+    path: /mnt/backup
+    state: directory
+    mode: "0755"
+
+- name: Copy dockerfile
+  ansible.builtin.copy:
+    src: files/dockerfile
+    dest: /tmp/Dockerfile
+    mode: "0644"
+  register: frigate_dockerfile_copy
+
+- name: Create backup script
+  become: true
+  ansible.builtin.copy:
+    src: "files/backup.sh"
+    dest: "/tmp/backup.sh"
+    mode: "0644"
+  register: frigate_backup_script_copy
+
+- name: Build Docker image
+  become: true
+  community.docker.docker_image:
+    name: "{{ frigate_backup_image_name }}"
+    tag: "{{ frigate_backup_image_tag }}"
+    source: build
+    push: false
+    build:
+      path: /tmp
+    force_source: "{{ frigate_dockerfile_copy.changed or frigate_backup_script_copy.changed }}"
+    state: present
+  notify: "Restart {{ frigate_service_name }}"
+
+- name: Create backup .env file
+  become: true
+  ansible.builtin.template:
+    src: templates/docker-compose/backup-toolkit.env.j2
+    dest: "{{ frigate_service_config_dir }}/backup-toolkit.env"
+    group: "{{ frigate_service_user }}"
+    owner: "{{ frigate_service_user }}"
+    mode: "0400"
+  notify: "Restart {{ frigate_service_name }}"
+
+- name: Create frigate backup systemd service file
+  become: true
+  ansible.builtin.template:
+    src: "templates/backup/backup.service.j2"
+    dest: /etc/systemd/system/{{ frigate_service_name }}-backup.service
+    owner: root
+    group: root
+    mode: "0644"
+  vars:
+    service: "{{ frigate_service_name }}"
+  register: frigate_service_backup
+
+- name: Create frigate backup systemd timer file
+  become: true
+  ansible.builtin.template:
+    src: "templates/backup/backup.timer.j2"
+    dest: /etc/systemd/system/{{ frigate_service_name }}-backup.timer
+    owner: root
+    group: root
+    mode: "0644"
+  vars:
+    service: "{{ frigate_service_name }}"
+    cron: "*-*-* 04:00:00"
+  register: frigate_timer_backup
+
+- name: Reload systemd
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: frigate_service_backup.changed or frigate_timer_backup.changed
+
+- name: Enable and start backup timer
+  become: true
+  ansible.builtin.systemd:
+    name: "{{ frigate_service_name }}-backup.timer"
+    enabled: true
+    state: started
+  when: frigate_service_backup.changed or frigate_timer_backup.changed

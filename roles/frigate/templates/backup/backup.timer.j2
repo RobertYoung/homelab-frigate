@@ -1,0 +1,8 @@
+[Unit]
+Description=Run {{ frigate_service_name }} backup periodically
+
+[Timer]
+OnCalendar={{ frigate_backup_cron | default('*-*-* 04:00:00') }}
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,51 @@
+services:
+  frigate:
+    container_name: frigate
+    privileged: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    image: ghcr.io/blakeblackshear/frigate:stable
+    shm_size: "2gb"
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+      # - /dev/dri/renderD128:/dev/dri/renderD128
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - frigate-config:/config
+      - {{ frigate_service_data_dir }}/data:/media/frigate
+      - /etc/letsencrypt/live/{{ frigate_certbot_cert_name }}:/etc/letsencrypt/live/frigate:ro
+      - /etc/letsencrypt/archive/{{ frigate_certbot_cert_name }}:/etc/letsencrypt/archive/frigate:ro
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+    ports:
+      - "443:8971"
+      - "5000:5000" # Internal unauthenticated access. Expose carefully.
+      - "1935:1935" # RTMP
+      - "8971:8971" # RTMP
+      - "8554:8554" # RTSP feeds
+      - "8555:8555/tcp" # WebRTC over tcp
+      - "8555:8555/udp" # WebRTC over udp
+    environment:
+      FRIGATE_RTSP_PASSWORD: "password"
+
+  backup-toolkit:
+    container_name: backup-toolkit
+    image: backup-toolkit:local
+    command: sleep infinity
+    restart: unless-stopped
+    volumes:
+      - frigate-config:{{ frigate_backup_from }}
+    env_file:
+      - ./backup-toolkit.env
+
+volumes:
+  frigate-config:

@@ -1,0 +1,16 @@
+---
+frigate_service_name: frigate
+frigate_service_port: "3001"
+frigate_service_data_dir: /var/lib/frigate
+frigate_service_config_dir: /etc/frigate
+frigate_service_user: frigate
+frigate_service_domain: frigate.local.iamrobertyoung.co.uk
+frigate_service_container_name: frigate
+
+frigate_backup_image_name: backup-toolkit
+frigate_backup_image_tag: local
+frigate_backup_from: /data
+frigate_backup_mosquitto_host: mosquitto.local.iamrobertyoung.co.uk
+frigate_backup_mosquitto_username: "home-assistant"
+frigate_backup_mosquitto_password: "password"
+frigate_backup_bucket_name: "home-server-backup.iamrobertyoung.co.uk"
