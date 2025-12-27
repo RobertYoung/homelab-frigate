@@ -1,0 +1,62 @@
+---
+- name: Create service user
+  become: true
+  ansible.builtin.user:
+    name: "{{ frigate_service_user }}"
+    create_home: false
+    comment: "{{ frigate_service_user }} user with no shell access"
+    shell: /bin/false
+  register: frigate_user_result
+
+- name: Create frigate directories
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ frigate_service_user }}"
+    group: "{{ frigate_service_user }}"
+  with_items:
+    - "{{ frigate_service_config_dir }}"
+    - "{{ frigate_service_data_dir }}"
+    - "{{ frigate_service_data_dir }}/data"
+    - "{{ frigate_service_data_dir }}/config"
+
+- name: Check if /dev/sdb is already formatted as ext4
+  become: true
+  ansible.builtin.command: lsblk -f /dev/sdb --output FSTYPE -n
+  register: frigate_disk_format_check
+  changed_when: false
+
+- name: Format /dev/sdb as ext4
+  become: true
+  ansible.builtin.command: mkfs.ext4 /dev/sdb
+  register: frigate_mkfs_result
+  changed_when: frigate_mkfs_result.rc == 0
+  when: frigate_disk_format_check.stdout.strip() != "ext4"
+
+- name: Ensure service_data_dir is mounted
+  become: true
+  ansible.posix.mount:
+    path: "{{ frigate_service_data_dir }}"
+    src: /dev/sdb
+    fstype: ext4
+    state: mounted
+
+- name: Add service user to docker group
+  become: true
+  ansible.builtin.user:
+    name: "{{ frigate_service_user }}"
+    groups: docker
+    append: true
+
+- name: Add users to docker group
+  become: true
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  with_items:
+    - root
+    - noxious
+    - "{{ frigate_service_user }}"

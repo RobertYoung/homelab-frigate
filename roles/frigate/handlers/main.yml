@@ -1,0 +1,29 @@
+---
+- name: "Restart {{ frigate_service_name }}"
+  become: true
+  ansible.builtin.systemd:
+    name: "{{ frigate_service_name }}"
+    state: stopped
+  notify: Reload systemd
+
+- name: Reload systemd
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+  notify: "Start {{ frigate_service_name }}"
+
+- name: "Start {{ frigate_service_name }}"
+  become: true
+  ansible.builtin.systemd:
+    name: "{{ frigate_service_name }}"
+    enabled: true
+    state: started
+
+- name: Reboot for NVIDIA driver
+  become: true
+  ansible.builtin.reboot:
+    msg: "Rebooting to load NVIDIA driver"
+    connect_timeout: 5
+    reboot_timeout: 600
+    pre_reboot_delay: 0
+    post_reboot_delay: 30
