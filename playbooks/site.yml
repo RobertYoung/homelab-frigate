@@ -41,7 +41,12 @@
       tags: [step-ca-client]
       vars:
         step_ca_client_provisioner_password: "{{ lookup('aws_ssm', '/home-server/step-ca-ansible-password', region='eu-west-2') }}"
-        step_ca_client_cert_not_after: "168h" # 7 days
+        step_ca_client_cert_not_after: "168h"  # 7 days
+        step_ca_client_post_renew_commands:
+          - "cp /etc/ssl/certs/{{ fqdn }}.crt /etc/frigate/certs/fullchain.pem"
+          - "cp /etc/ssl/private/{{ fqdn }}.pem /etc/frigate/certs/privkey.pem"
+          - "chmod 600 /etc/frigate/certs/privkey.pem"
+          - "docker exec frigate nginx -s reload || true"
 
     - role: syslog
       tags: [syslog]
@@ -51,19 +56,9 @@
     - role: wazuh-agent
       tags: [wazuh-agent]
 
-    - role: certbot
-      tags: [certbot]
-      vars:
-        certbot_domain: "{{ fqdn }}"
-        certbot_cert_name: "{{ hostname }}"
-        certbot_aws_access_key: "{{ lookup('aws_ssm', '/home-server/certbot-access-key', region='eu-west-2') }}"
-        certbot_aws_secret_access_key: "{{ lookup('aws_ssm', '/home-server/certbot-secret-access-key', region='eu-west-2') }}"
-
     - role: frigate
       tags: [frigate]
       vars:
-        frigate_certbot_domain: "{{ fqdn }}"
-        frigate_certbot_cert_name: "{{ hostname }}"
         frigate_backup_aws_access_key: "{{ lookup('aws_ssm', '/home-server/access-key', region='eu-west-2') }}"
         frigate_backup_aws_secret_access_key: "{{ lookup('aws_ssm', '/home-server/secret-access-key', region='eu-west-2') }}"
         frigate_backup_aws_region: eu-west-2

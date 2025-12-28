@@ -7,6 +7,9 @@ frigate_service_user: frigate
 frigate_service_domain: frigate.local.iamrobertyoung.co.uk
 frigate_service_container_name: frigate
 
+frigate_tls_cert_file: "/etc/ssl/certs/{{ frigate_service_domain }}.crt"
+frigate_tls_key_file: "/etc/ssl/private/{{ frigate_service_domain }}.pem"
+
 frigate_backup_image_name: backup-toolkit
 frigate_backup_image_tag: local
 frigate_backup_from: /data
