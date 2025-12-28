@@ -22,6 +22,29 @@
     - "{{ frigate_service_data_dir }}/data"
     - "{{ frigate_service_data_dir }}/config"
 
+- name: Create frigate certs directory
+  become: true
+  ansible.builtin.file:
+    path: "{{ frigate_service_config_dir }}/certs"
+    state: directory
+    mode: "0755"
+
+- name: Copy TLS certificate
+  become: true
+  ansible.builtin.copy:
+    src: "{{ frigate_tls_cert_file }}"
+    dest: "{{ frigate_service_config_dir }}/certs/fullchain.pem"
+    remote_src: true
+    mode: "0644"
+
+- name: Copy TLS private key
+  become: true
+  ansible.builtin.copy:
+    src: "{{ frigate_tls_key_file }}"
+    dest: "{{ frigate_service_config_dir }}/certs/privkey.pem"
+    remote_src: true
+    mode: "0600"
+
 - name: Check if /dev/sdb is already formatted as ext4
   become: true
   ansible.builtin.command: lsblk -f /dev/sdb --output FSTYPE -n
