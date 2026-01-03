@@ -28,6 +28,7 @@ services:
     ports:
       - "443:8971"
       - "5000:5000" # Internal unauthenticated access. Expose carefully.
+      - "1984:1984" # Go2rtc?
       - "1935:1935" # RTMP
       - "8971:8971" # RTMP
       - "8554:8554" # RTSP feeds
