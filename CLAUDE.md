@@ -55,8 +55,8 @@ Key directories on target host:
 - `/etc/frigate/certs` - TLS certificates (copied from /etc/ssl, mounted as directory into nginx)
 
 ### Secrets Management
-Secrets are stored in AWS SSM Parameter Store (region: eu-west-2).
-Ansible retrieves them via `lookup('aws_ssm', '/path/to/secret', region='eu-west-2')`.
+Secrets are stored in AWS SSM Parameter Store (region: eu-west-1) under the `/homelab/` prefix.
+Ansible retrieves them via `lookup('aws_ssm', '/homelab/path/to/secret', region='eu-west-1')`.
 
 ### External Dependencies
 Dependencies in `requirements.yml` are installed to `.roles/` (gitignored). External roles use SSH git URLs requiring SSH keys.
