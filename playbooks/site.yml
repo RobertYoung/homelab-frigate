@@ -63,3 +63,6 @@
         frigate_backup_aws_secret_access_key: "{{ lookup('aws_ssm', '/homelab/aws/secret-access-key', region='eu-west-1') }}"
         frigate_backup_aws_region: eu-west-2
         frigate_backup_mosquitto_password: "{{ lookup('aws_ssm', '/homelab/mosquitto/home-assistant-password', region='eu-west-1') }}"
+        frigate_mqtt_password: "{{ lookup('aws_ssm', '/homelab/mosquitto/frigate-password', region='eu-west-1') }}"
+        frigate_camera_frigate_password: "{{ lookup('aws_ssm', '/homelab/frigate/camera-frigate-password', region='eu-west-1') }}"
+        frigate_camera_admin_password: "{{ lookup('aws_ssm', '/homelab/frigate/camera-admin-password', region='eu-west-1') }}"

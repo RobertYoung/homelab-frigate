@@ -17,3 +17,7 @@ frigate_backup_mosquitto_host: mosquitto.local.iamrobertyoung.co.uk
 frigate_backup_mosquitto_username: "home-assistant"
 frigate_backup_mosquitto_password: "password"
 frigate_backup_bucket_name: "home-server-backup.iamrobertyoung.co.uk"
+
+frigate_mqtt_password: "password"
+frigate_camera_frigate_password: "password"
+frigate_camera_admin_password: "password"
