@@ -37,13 +37,14 @@ detectors:
 
 record:
   enabled: true
-  retain:
+  continuous:
     days: 5
-    mode: all
-  # events:
+  # alerts:
   #   retain:
-  #     default: 30
-  #     mode: motion
+  #     days: 30
+  # detections:
+  #   retain:
+  #     days: 30
 
 snapshots:
   enabled: true
@@ -85,6 +86,9 @@ go2rtc:
 cameras:
   outside_front:
     enabled: true
+    detect:
+      width: 896
+      height: 512
     ffmpeg:
       inputs:
         - path: rtsp://127.0.0.1:8554/outside_front
@@ -96,6 +100,9 @@ cameras:
             - detect
   doorbell:
     enabled: true
+    detect:
+      width: 896
+      height: 672
     ffmpeg:
       inputs:
         - path: rtsp://127.0.0.1:8554/doorbell
@@ -114,6 +121,9 @@ cameras:
     #   password: <camera admin password>
   living_room:
     enabled: true
+    detect:
+      width: 640
+      height: 360
     ffmpeg:
       inputs:
         - path: rtsp://127.0.0.1:8554/living_room
@@ -138,6 +148,9 @@ cameras:
       improve_contrast: true
   outside_driveway:
     enabled: true
+    detect:
+      width: 896
+      height: 512
     ffmpeg:
       inputs:
         - path: rtsp://127.0.0.1:8554/outside_driveway
@@ -154,6 +167,9 @@ cameras:
     #   password: <camera frigate password>
   outside_back_garden:
     enabled: true
+    detect:
+      width: 896
+      height: 512
     ffmpeg:
       inputs:
         - path: rtsp://127.0.0.1:8554/outside_back_garden
@@ -172,6 +188,9 @@ cameras:
       mask: 0.007,0.01,0.004,0.982,0.993,0.99,0.996,0.007
   outside_side:
     enabled: true
+    detect:
+      width: 896
+      height: 512
     ffmpeg:
       inputs:
         - path: rtsp://127.0.0.1:8554/outside_side
@@ -186,7 +205,7 @@ cameras:
     #   port: 8000
     #   user: frigate
     #   password: <camera frigate password>
-version: 0.16-0
+version: 0.17-0
 semantic_search:
   enabled: false
   model_size: small
