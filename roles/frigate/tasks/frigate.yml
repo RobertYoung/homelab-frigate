@@ -9,6 +9,16 @@
     mode: "0644"
   notify: "Restart {{ frigate_service_name }}"
 
+- name: Render frigate config
+  become: true
+  ansible.builtin.template:
+    src: "templates/frigate/config.yaml.j2"
+    dest: "{{ frigate_service_config_dir }}/config.yaml"
+    owner: "{{ frigate_service_user }}"
+    group: "{{ frigate_service_user }}"
+    mode: "0640"
+  notify: "Restart {{ frigate_service_name }}"
+
 - name: Create systemd service file
   become: true
   ansible.builtin.template:

@@ -1,0 +1,200 @@
+mqtt:
+  enabled: true
+  host: mosquitto.local.iamrobertyoung.co.uk
+  port: 1883
+  user: frigate
+  password: "{{ frigate_mqtt_password }}"
+
+tls:
+  enabled: true
+
+auth:
+  session_length: 2592000 # 30 days
+  refresh_time: 1296000 # 15 days
+
+ffmpeg:
+  # hwaccel_args: preset-nvidia
+  hwaccel_args: preset-nvidia-h264
+  input_args: preset-rtsp-restream
+  output_args:
+    record: preset-record-generic-audio-copy
+
+detectors:
+  coral:
+    type: edgetpu
+    device: usb
+    #ov:
+    #type: openvino
+    #device: GPU
+
+    #model:
+    #  width: 300
+    #  height: 300
+    #  input_tensor: nhwc
+    #  input_pixel_format: bgr
+    #  path: /openvino-model/ssdlite_mobilenet_v2.xml
+    #  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+
+record:
+  enabled: true
+  retain:
+    days: 5
+    mode: all
+  # events:
+  #   retain:
+  #     default: 30
+  #     mode: motion
+
+snapshots:
+  enabled: true
+  retain:
+    default: 30
+
+audio:
+  enabled: false
+
+detect:
+  enabled: true
+
+go2rtc:
+  streams:
+    outside_front: rtsp://frigate:{{ frigate_camera_frigate_password }}@10.0.30.23:8554/Preview_01_main
+    outside_front_sub: rtsp://frigate:{{ frigate_camera_frigate_password }}@10.0.30.23:8554/Preview_01_sub
+    doorbell:
+      - ffmpeg:http://10.0.30.21/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=admin&password={{ frigate_camera_admin_password }}#video=copy#audio=copy#audio=opus
+      - rtsp://admin:{{ frigate_camera_admin_password }}@10.0.30.21:8554/Preview_01_sub
+    doorbell_sub:
+      - ffmpeg:http://10.0.30.21/flv?port=1935&app=bcs&stream=channel0_ext.bcs&user=admin&password={{ frigate_camera_admin_password }}
+    living_room: rtsp://frigate:{{ frigate_camera_frigate_password }}@10.0.30.22:8554/Preview_01_main
+    living_room_sub: rtsp://frigate:{{ frigate_camera_frigate_password }}@10.0.30.22:8554/h264Preview_01_sub
+    outside_driveway: rtsp://frigate:{{ frigate_camera_frigate_password }}@10.0.30.20:8554/Preview_01_main
+    outside_driveway_sub: rtsp://frigate:{{ frigate_camera_frigate_password }}@10.0.30.20:8554/Preview_01_sub
+    outside_back_garden: rtsp://frigate:{{ frigate_camera_frigate_password }}@10.0.30.24:8554/Preview_01_main
+    outside_back_garden_sub: rtsp://frigate:{{ frigate_camera_frigate_password }}@10.0.30.24:8554/Preview_01_sub
+    outside_side: rtsp://frigate:{{ frigate_camera_frigate_password }}@10.0.30.25:8554/Preview_01_main
+    outside_side_sub: rtsp://frigate:{{ frigate_camera_frigate_password }}@10.0.30.25:8554/Preview_01_sub
+  ffmpeg:
+    # bin: ffmpeg
+    volume: -af "volume=25dB"
+  webrtc:
+    candidates:
+      - stun:8555
+      - 10.0.20.20:8555
+      - 100.100.129.24:8555
+
+cameras:
+  outside_front:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/outside_front
+          roles:
+            - record
+        - path: rtsp://127.0.0.1:8554/outside_front_sub
+          roles:
+            - audio
+            - detect
+  doorbell:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/doorbell
+          input_args: preset-rtsp-restream
+          roles:
+            - record
+        - path: rtsp://127.0.0.1:8554/doorbell_sub
+          input_args: preset-rtsp-restream
+          roles:
+            - audio
+            - detect
+    # onvif:
+    #   host: 10.0.30.21
+    #   port: 8000
+    #   user: admin
+    #   password: <camera admin password>
+  living_room:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/living_room
+          roles:
+            - record
+        - path: rtsp://127.0.0.1:8554/living_room_sub
+          roles:
+            - audio
+            - detect
+    onvif:
+      host: 10.0.30.22
+      port: 8000
+      user: admin
+      password: "{{ frigate_camera_admin_password }}"
+    objects:
+      filters:
+        person:
+          mask: 0.024,0.038,0.017,0.955,0.979,0.965,0.985,0.056
+    motion:
+      threshold: 30
+      contour_area: 10
+      improve_contrast: true
+  outside_driveway:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/outside_driveway
+          roles:
+            - record
+        - path: rtsp://127.0.0.1:8554/outside_driveway_sub
+          roles:
+            - audio
+            - detect
+    # onvif:
+    #   host: 10.0.30.20
+    #   port: 8000
+    #   user: frigate
+    #   password: <camera frigate password>
+  outside_back_garden:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/outside_back_garden
+          roles:
+            - record
+        - path: rtsp://127.0.0.1:8554/outside_back_garden_sub
+          roles:
+            - audio
+            - detect
+    # onvif:
+    #   host: 10.0.30.24
+    #   port: 8000
+    #   user: frigate
+    #   password: <camera frigate password>
+    objects:
+      mask: 0.007,0.01,0.004,0.982,0.993,0.99,0.996,0.007
+  outside_side:
+    enabled: true
+    ffmpeg:
+      inputs:
+        - path: rtsp://127.0.0.1:8554/outside_side
+          roles:
+            - record
+        - path: rtsp://127.0.0.1:8554/outside_side_sub
+          roles:
+            - audio
+            - detect
+    # onvif:
+    #   host: 10.0.30.25
+    #   port: 8000
+    #   user: frigate
+    #   password: <camera frigate password>
+version: 0.16-0
+semantic_search:
+  enabled: false
+  model_size: small
+face_recognition:
+  enabled: false
+  model_size: large
+lpr:
+  enabled: false
+classification:
+  bird:
+    enabled: false
