@@ -4,7 +4,7 @@ services:
     privileged: true
     restart: unless-stopped
     stop_grace_period: 30s
-    image: ghcr.io/blakeblackshear/frigate:stable
+    image: "{{ frigate_image }}:{{ frigate_image_tag }}"
     shm_size: "2gb"
     devices:
       - /dev/bus/usb:/dev/bus/usb
